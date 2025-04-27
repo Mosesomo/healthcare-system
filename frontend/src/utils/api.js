@@ -1,4 +1,3 @@
-// utils/api.js
 import axios from 'axios';
 
 // Base URL for API
@@ -35,7 +34,13 @@ export const programAPI = {
 export const enrollmentAPI = {
   getAll: () => api.get('/enrollments'),
   get: (id) => api.get(`/enrollments/${id}`),
-  create: (data) => api.post('/enrollments', data),
+  create: (data) => api.post('/enrollments', {
+    clientId: data.clientId,
+    programId: data.programId,
+    enrollmentDate: data.enrollmentDate,
+    status: data.status,
+    notes: data.notes
+  }),
   update: (id, data) => api.put(`/enrollments/${id}`, data),
   delete: (id) => api.delete(`/enrollments/${id}`),
   getByClientId: (clientId) => api.get(`/enrollments/client/${clientId}`),

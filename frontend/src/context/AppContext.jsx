@@ -1,4 +1,3 @@
-// context/AppContext.js
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { clientAPI, programAPI, enrollmentAPI } from '../utils/api';
 import { toast } from 'react-toastify';
@@ -115,7 +114,6 @@ export const AppProvider = ({ children }) => {
     try {
       await clientAPI.delete(id);
       setClients(clients.filter(client => client.id !== id));
-      // Also remove associated enrollments
       setEnrollments(enrollments.filter(enrollment => enrollment.client !== id));
       toast.success("Client deleted successfully!");
     } catch (err) {
@@ -158,7 +156,6 @@ export const AppProvider = ({ children }) => {
     try {
       await programAPI.delete(id);
       setPrograms(programs.filter(program => program.id !== id));
-      // Also remove associated enrollments
       setEnrollments(enrollments.filter(enrollment => enrollment.program !== id));
       toast.success("Program deleted successfully!");
     } catch (err) {
@@ -177,21 +174,22 @@ export const AppProvider = ({ children }) => {
       return response.data;
     } catch (err) {
       console.error("Error adding enrollment:", err);
-      toast.error("Failed to add enrollment");
+      toast.error(err.response?.data?.message || "Failed to add enrollment");
       throw err;
     }
   };
-
-  // Update an existing enrollment
+  
   const updateEnrollment = async (id, enrollmentData) => {
     try {
       const response = await enrollmentAPI.update(id, enrollmentData);
-      setEnrollments(enrollments.map(enrollment => enrollment.id === id ? response.data : enrollment));
+      setEnrollments(enrollments.map(enrollment => 
+        enrollment._id === id ? response.data : enrollment
+      ));
       toast.success("Enrollment updated successfully!");
       return response.data;
     } catch (err) {
       console.error(`Error updating enrollment ${id}:`, err);
-      toast.error("Failed to update enrollment");
+      toast.error(err.response?.data?.message || "Failed to update enrollment");
       throw err;
     }
   };
@@ -212,7 +210,6 @@ export const AppProvider = ({ children }) => {
   // Get all enrollments (can be filtered by client ID)
   const getEnrollments = useCallback(async (clientId = null) => {
     try {
-      // If we already have enrollments loaded, return them filtered by client ID if provided
       if (enrollments.length && !loading) {
         return clientId 
           ? enrollments.filter(enrollment => enrollment.client === clientId)
@@ -240,8 +237,8 @@ export const AppProvider = ({ children }) => {
     <AppContext.Provider value={{
       clients,
       programs,
-      enrollments, // The raw enrollments array
-      getEnrollments, // Function to get and filter enrollments
+      enrollments,
+      getEnrollments,
       loading,
       error,
       getClient,

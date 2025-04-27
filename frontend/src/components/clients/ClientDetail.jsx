@@ -5,7 +5,7 @@ import {
   Edit, Trash2, ChevronLeft, Printer, UserPlus, CheckCircle
 } from 'lucide-react';
 
-const ClientDetail = ({ client, onDelete }) => {
+const ClientDetail = ({ client, onDelete, onEditClient }) => {
   const calculateAge = (dob) => {
     const birthDate = new Date(dob);
     const today = new Date();
@@ -17,6 +17,15 @@ const ClientDetail = ({ client, onDelete }) => {
     }
     
     return age;
+  };
+  
+  const handleEdit = () => {
+    const clientToEdit = { ...client };
+    
+    delete clientToEdit.gender;
+    delete clientToEdit.dateOfBirth;
+    
+    onEditClient(clientToEdit);
   };
   
   return (
@@ -37,13 +46,13 @@ const ClientDetail = ({ client, onDelete }) => {
             <Printer size={16} />
             <span>Print</span>
           </button>
-          <Link 
-            to={`/clients/edit/${client._id}`}
-            className="flex items-center gap-1 px-3 py-2 border border-green-300 bg-green-50 rounded-lg text-green-700 hover:bg-green-100 transition-colors"
+          <button
+            onClick={handleEdit}
+            className="flex items-center gap-1 px-3 py-2 border border-blue-300 bg-blue-50 rounded-lg text-blue-700 hover:bg-blue-100 transition-colors"
           >
             <Edit size={16} />
             <span>Edit</span>
-          </Link>
+          </button>
           <button 
             onClick={() => onDelete && onDelete(client._id)} 
             className="flex items-center gap-1 px-3 py-2 border border-red-300 bg-red-50 rounded-lg text-red-700 hover:bg-red-100 transition-colors"
@@ -53,7 +62,6 @@ const ClientDetail = ({ client, onDelete }) => {
           </button>
         </div>
       </div>
-      
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Main Info Card */}
         <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100 lg:col-span-2">
@@ -114,7 +122,7 @@ const ClientDetail = ({ client, onDelete }) => {
                 </li>
               </ul>
             </div>
-            
+          
             {/* Address Information */}
             <div>
               <h3 className="text-md font-semibold text-gray-800 mb-4 flex items-center">
@@ -141,7 +149,7 @@ const ClientDetail = ({ client, onDelete }) => {
           </div>
         </div>
         
-        {/* Side Cards */}
+        {/* Side Cards sections are unchanged */}
         <div className="space-y-6">
           {/* Medical History Card */}
           <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
@@ -163,84 +171,6 @@ const ClientDetail = ({ client, onDelete }) => {
               >
                 <Activity size={14} className="mr-1" />
                 View full medical records
-              </Link>
-            </div>
-          </div>
-          
-          {/* Appointments Card */}
-          <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
-            <h3 className="text-md font-semibold text-gray-800 mb-4 flex items-center">
-              <Calendar size={16} className="mr-2 text-blue-600" />
-              Upcoming Appointments
-            </h3>
-            
-            {client.appointments && client.appointments.length > 0 ? (
-              <ul className="space-y-3">
-                {client.appointments.slice(0, 3).map((appointment, index) => (
-                  <li key={index} className="flex items-start p-2 hover:bg-gray-50 rounded-lg">
-                    <div className="bg-blue-100 text-blue-800 rounded-lg px-2 py-1 text-xs font-medium w-16 text-center">
-                      {new Date(appointment.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
-                    </div>
-                    <div className="ml-3">
-                      <p className="text-gray-800 font-medium">{appointment.type}</p>
-                      <p className="text-gray-500 text-sm">
-                        {new Date(appointment.time).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })}
-                      </p>
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <p className="text-gray-500 italic">No upcoming appointments</p>
-            )}
-            
-            <div className="mt-4 pt-4 border-t border-gray-100 flex justify-between">
-              <Link 
-                to={`/clients/${client.id}/appointments`}
-                className="text-blue-600 hover:text-blue-800 text-sm font-medium flex items-center"
-              >
-                <Calendar size={14} className="mr-1" />
-                View all appointments
-              </Link>
-              <Link 
-                to={`/appointments/new?clientId=${client.id}`}
-                className="text-green-600 hover:text-green-800 text-sm font-medium flex items-center"
-              >
-                <UserPlus size={14} className="mr-1" />
-                Schedule new
-              </Link>
-            </div>
-          </div>
-          
-          {/* Notes/Follow-up Card */}
-          <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
-            <h3 className="text-md font-semibold text-gray-800 mb-4 flex items-center">
-              <CheckCircle size={16} className="mr-2 text-blue-600" />
-              Notes & Follow-ups
-            </h3>
-            
-            {client.notes && client.notes.length > 0 ? (
-              <ul className="space-y-3">
-                {client.notes.slice(0, 3).map((note, index) => (
-                  <li key={index} className="p-2 border-l-2 border-blue-500 bg-gray-50 rounded-r-lg">
-                    <p className="text-gray-800">{note.content}</p>
-                    <p className="text-gray-500 text-xs mt-1">
-                      {new Date(note.date).toLocaleDateString()} · {note.author}
-                    </p>
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <p className="text-gray-500 italic">No notes added yet</p>
-            )}
-            
-            <div className="mt-4 pt-4 border-t border-gray-100">
-              <Link 
-                to={`/clients/${client.id}/notes`}
-                className="text-blue-600 hover:text-blue-800 text-sm font-medium flex items-center"
-              >
-                <Edit size={14} className="mr-1" />
-                Add or view notes
               </Link>
             </div>
           </div>

@@ -56,29 +56,19 @@ const Dashboard = () => {
 
   // Get recent clients (last 3)
   const recentClients = [...clients].slice(0, 3).map(client => ({
-    id: client.id,
+    _id: client._id,  // Changed from id to _id
     name: `${client.firstName} ${client.lastName}`,
-    enrolledPrograms: enrollments.filter(e => e.client === client.id).length,
-    status: 'Active' // Simplified for this example
+    enrolledPrograms: enrollments.filter(e => e.client === client._id).length,
+    status: 'Active'
   }));
-
+  
   // Get active programs with enrollment counts
   const activePrograms = programs.slice(0, 3).map(program => ({
-    id: program.id,
+    _id: program._id,
     name: program.name,
-    enrolledClients: enrollments.filter(e => e.program === program.id).length,
-    progress: Math.floor(Math.random() * 50) + 50 // Random progress for demo
+    enrolledClients: enrollments.filter(e => e.program === program._id).length,
+    progress: Math.floor(Math.random() * 50) + 50
   }));
-
-  // Chart data (placeholder - would ideally use real data over time)
-  const chartData = [
-    { month: 'Jan', enrollments: Math.floor(Math.random() * 10) + 5 },
-    { month: 'Feb', enrollments: Math.floor(Math.random() * 10) + 10 },
-    { month: 'Mar', enrollments: Math.floor(Math.random() * 10) + 15 },
-    { month: 'Apr', enrollments: Math.floor(Math.random() * 10) + 20 },
-    { month: 'May', enrollments: Math.floor(Math.random() * 10) + 25 },
-    { month: 'Jun', enrollments: Math.floor(Math.random() * 10) + 20 },
-  ];
 
   if (loading) {
     return (
@@ -172,31 +162,6 @@ const Dashboard = () => {
               <path d="M12 5l7 7-7 7"></path>
             </svg>
           </Link>
-        </div>
-      </div>
-      
-      {/* Chart section */}
-      <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100 mb-8">
-        <div className="flex justify-between items-center mb-6">
-          <h2 className="text-lg font-semibold text-gray-800">Enrollment Trends</h2>
-          <div className="flex gap-2">
-            <button className="px-3 py-1 bg-blue-50 text-blue-600 rounded-lg text-sm font-medium">Monthly</button>
-            <button className="px-3 py-1 text-gray-500 hover:bg-gray-50 rounded-lg text-sm">Quarterly</button>
-            <button className="px-3 py-1 text-gray-500 hover:bg-gray-50 rounded-lg text-sm">Yearly</button>
-          </div>
-        </div>
-        <div className="h-64 w-full">
-          <div className="flex items-end h-48 gap-2 pt-4 border-b border-t border-gray-100">
-            {chartData.map((data, index) => (
-              <div key={index} className="flex flex-col items-center flex-1">
-                <div 
-                  className="w-full bg-blue-500 rounded-t-lg transition-all hover:bg-blue-600"
-                  style={{ height: `${data.enrollments * 2}px` }}
-                ></div>
-                <span className="text-xs text-gray-500 mt-2">{data.month}</span>
-              </div>
-            ))}
-          </div>
         </div>
       </div>
       

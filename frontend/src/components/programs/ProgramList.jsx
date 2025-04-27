@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Eye, Trash2, Edit, Search, Filter, ChevronDown, ChevronUp, FileText, ChevronLeft, ChevronRight } from 'lucide-react';
 
-const ProgramList = ({ programs, onDelete }) => {
+const ProgramList = ({ programs, onDelete, onEdit }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [sortField, setSortField] = useState('name');
   const [sortDirection, setSortDirection] = useState('asc');
@@ -43,6 +43,13 @@ const ProgramList = ({ programs, onDelete }) => {
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
   const currentPrograms = sortedPrograms.slice(indexOfFirstItem, indexOfLastItem);
   const totalPages = Math.ceil(sortedPrograms.length / itemsPerPage);
+
+  // Handle edit program
+  const handleEdit = (program) => {
+    if (onEdit) {
+      onEdit(program);
+    }
+  };
 
   // Sort icon component
   const SortIcon = ({ field }) => {
@@ -94,7 +101,6 @@ const ProgramList = ({ programs, onDelete }) => {
               <Filter size={16} />
               <span>Filter</span>
             </button>
-            
           </div>
         </div>
       </div>
@@ -151,7 +157,7 @@ const ProgramList = ({ programs, onDelete }) => {
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
             {currentPrograms.map((program) => (
-              <tr key={program.id} className="hover:bg-gray-50 transition-colors">
+              <tr key={program._id} className="hover:bg-gray-50 transition-colors">
                 <td className="px-6 py-4 whitespace-nowrap">
                   <div className="flex items-center">
                     <div className="flex-shrink-0 h-8 w-8 rounded-full bg-green-100 flex items-center justify-center text-green-600 font-medium">
@@ -187,13 +193,13 @@ const ProgramList = ({ programs, onDelete }) => {
                     >
                       <Eye size={18} />
                     </Link>
-                    <Link 
-                      to={`/programs/edit/${program._id}`} 
+                    <button 
+                      onClick={() => handleEdit(program)} 
                       className="p-1.5 text-gray-600 hover:bg-gray-50 rounded"
                       title="Edit Program"
                     >
                       <Edit size={18} />
-                    </Link>
+                    </button>
                     <button 
                       onClick={() => onDelete && onDelete(program._id)} 
                       className="p-1.5 text-red-600 hover:bg-red-50 rounded"

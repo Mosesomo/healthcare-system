@@ -4,6 +4,7 @@ import ClientDetail from '../components/clients/ClientDetail';
 import EnrollmentForm from '../components/enrollments/EnrollmentForm';
 import { useAppContext } from '../context/AppContext';
 import { toast } from 'react-toastify';
+import { ChevronLeft, Plus, UserCheck, RefreshCw, Calendar, X} from 'lucide-react';
 
 const ClientProfilePage = () => {
   const { id } = useParams();
@@ -27,9 +28,10 @@ const ClientProfilePage = () => {
         const clientData = await getClient(id);
         setClient(clientData);
         
-        // Get all enrollments and filter for this client
         const enrollmentRecords = await getEnrollments();
-        const filteredEnrollments = enrollmentRecords.filter(e => e.client === id);
+        const filteredEnrollments = enrollmentRecords.filter(e => 
+          e.client?._id === id || e.client === id
+        );
         setClientEnrollments(filteredEnrollments);
       } catch (err) {
         toast.error(`Failed to load client data: ${err.message}`);
@@ -39,25 +41,25 @@ const ClientProfilePage = () => {
     fetchData();
   }, [id, getClient, getEnrollments]);
 
-  const handleEnrollClient = async (formData) => {
+  const handleEnrollClient = async (enrollmentData) => {
     try {
-      // Using formData directly as that's what the API expects
-      const newEnrollmentData = {
-        ...formData,
-        clientId: id // Ensure the client ID is set
+      const completeData = {
+        ...enrollmentData,
+        client: id
       };
       
-      await addEnrollment(newEnrollmentData);
+      await addEnrollment(completeData);
       
-      // Refresh enrollments after successful enrollment
       const enrollmentRecords = await getEnrollments();
-      const filteredEnrollments = enrollmentRecords.filter(e => e.client === id);
+      const filteredEnrollments = enrollmentRecords.filter(e => 
+        e.client?._id === id || e.client === id
+      );
       setClientEnrollments(filteredEnrollments);
       
       setShowEnrollForm(false);
       toast.success('Client enrolled successfully!');
     } catch (err) {
-      toast.error(`Enrollment failed: ${err.message}`);
+      toast.error(err.response?.data?.message || 'Enrollment failed');
     }
   };
 
@@ -69,6 +71,19 @@ const ClientProfilePage = () => {
     } catch (err) {
       toast.error(`Update failed: ${err.message}`);
     }
+  };
+
+  const handleEdit = (clientData) => {
+    const editableClient = {
+      _id: clientData._id,
+      firstName: clientData.firstName,
+      lastName: clientData.lastName,
+      phoneNumber: clientData.phoneNumber,
+      email: clientData.email,
+      address: clientData.address,
+    };
+
+    handleUpdateClient(editableClient);
   };
 
   if (loading && !client) {
@@ -99,16 +114,14 @@ const ClientProfilePage = () => {
           to="/clients" 
           className="text-blue-600 hover:underline flex items-center gap-1"
         >
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-            <path d="M19 12H5M12 19l-7-7 7-7" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-          </svg>
+          <ChevronLeft size={16} />
           Back to Clients
         </Link>
       </div>
       
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold text-gray-800">
-          Client Profile: {client.firstName} {client.lastName}
+          Client Profile: {client?.firstName} {client?.lastName}
         </h1>
         <button 
           onClick={() => setShowEnrollForm(!showEnrollForm)}
@@ -117,16 +130,12 @@ const ClientProfilePage = () => {
         >
           {showEnrollForm ? (
             <>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                <path d="M6 18L18 6M6 6l12 12" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
+              <X size={16} />
               Cancel
             </>
           ) : (
             <>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                <path d="M12 5v14M5 12h14" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
+              <Plus size={16} />
               Enroll in Program
             </>
           )}
@@ -137,7 +146,7 @@ const ClientProfilePage = () => {
         <div className="mb-8">
           <EnrollmentForm 
             programs={availablePrograms}
-            clientId={id}
+            clientId={client?._id}
             onEnroll={handleEnrollClient}
             onCancel={() => setShowEnrollForm(false)}
           />
@@ -148,49 +157,75 @@ const ClientProfilePage = () => {
         <div className="lg:col-span-2">
           <ClientDetail 
             client={client} 
-            onUpdate={handleUpdateClient} 
+            onEditClient={handleEdit} 
           />
         </div>
         
         <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-          <h2 className="text-lg font-semibold text-gray-800 mb-4">
-            Enrolled Programs
-          </h2>
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg font-semibold text-gray-800 flex items-center gap-2">
+              <UserCheck size={20} className="text-blue-600" />
+              Enrolled Programs
+            </h2>
+            <span className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full">
+              {clientEnrollments.length} programs
+            </span>
+          </div>
           
           {loading && !clientEnrollments.length ? (
             <div className="flex justify-center py-4">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+              <RefreshCw size={24} className="animate-spin text-blue-600" />
             </div>
           ) : clientEnrollments.length === 0 ? (
-            <p className="text-gray-500">No active enrollments</p>
+            <div className="text-center py-8">
+              <p className="text-gray-500 mb-2">No active enrollments</p>
+              <button 
+                onClick={() => setShowEnrollForm(true)}
+                className="text-blue-600 hover:underline text-sm"
+              >
+                Enroll in a program
+              </button>
+            </div>
           ) : (
-            <div className="space-y-4">
-              {clientEnrollments.map(enrollment => (
-                <div 
-                  key={enrollment._id} 
-                  className="p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
-                >
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <h3 className="font-medium text-gray-800">
-                        {programs.find(p => p.id === enrollment.program)?.name || 'Unknown Program'}
-                      </h3>
-                      <p className="text-sm text-gray-600 mt-1">
-                        Enrolled: {new Date(enrollment.enrollmentDate).toLocaleDateString()}
-                      </p>
+            <div className="space-y-3">
+              {clientEnrollments.map(enrollment => {
+                const program = programs.find(p => p._id === enrollment.program?._id || p._id === enrollment.program);
+                
+                return (
+                  <div 
+                    key={enrollment._id} 
+                    className="p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+                  >
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <h3 className="font-medium text-gray-800">
+                          {program?.name || 'Unknown Program'}
+                        </h3>
+                        <div className="flex items-center gap-2 mt-1">
+                          <Calendar size={14} className="text-gray-400" />
+                          <p className="text-sm text-gray-600">
+                            Enrolled: {new Date(enrollment.enrollmentDate).toLocaleDateString()}
+                          </p>
+                        </div>
+                        {enrollment.notes && (
+                          <p className="text-sm text-gray-500 mt-2">
+                            Notes: {enrollment.notes}
+                          </p>
+                        )}
+                      </div>
+                      <span className={`px-2.5 py-0.5 text-xs font-medium rounded-full ${
+                        enrollment.status === 'Active' 
+                          ? 'bg-green-100 text-green-800' 
+                          : enrollment.status === 'Completed'
+                            ? 'bg-blue-100 text-blue-800'
+                            : 'bg-gray-100 text-gray-800'
+                      }`}>
+                        {enrollment.status}
+                      </span>
                     </div>
-                    <span className={`px-2.5 py-0.5 text-xs font-medium rounded-full ${
-                      enrollment.status === 'Active' 
-                        ? 'bg-green-100 text-green-800' 
-                        : enrollment.status === 'Completed'
-                          ? 'bg-blue-100 text-blue-800'
-                          : 'bg-gray-100 text-gray-800'
-                    }`}>
-                      {enrollment.status}
-                    </span>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>

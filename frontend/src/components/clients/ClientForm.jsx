@@ -1,12 +1,11 @@
 import React, { useState, useEffect} from 'react';
-import { useParams  } from 'react-router-dom';
-import { User, Phone, MapPin, FileText, Calendar, Save, UserCheck, X } from 'lucide-react';
+import { useParams } from 'react-router-dom';
+import { User, Phone, FileText, Calendar, Save, UserCheck, X } from 'lucide-react';
 import { useAppContext } from '../../context/AppContext';
-
 
 const ClientForm = ({ addClient, initialData = null, onCancel = null }) => {
   const { id } = useParams();
-  const {  updateClient, getClient } = useAppContext();
+  const { updateClient, getClient } = useAppContext();
   const [formData, setFormData] = useState(initialData || {
     firstName: '',
     lastName: '',
@@ -24,7 +23,7 @@ const ClientForm = ({ addClient, initialData = null, onCancel = null }) => {
   const [formError, setFormError] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Load client data if editing
+  // Load client data if editing via URL parameter
   useEffect(() => {
     if (id && id !== 'new') {
       const client = getClient(id);
@@ -33,6 +32,13 @@ const ClientForm = ({ addClient, initialData = null, onCancel = null }) => {
       }
     }
   }, [id, getClient]);
+
+  // Load client data if editing via props
+  useEffect(() => {
+    if (initialData) {
+      setFormData(initialData);
+    }
+  }, [initialData]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -57,31 +63,36 @@ const ClientForm = ({ addClient, initialData = null, onCancel = null }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setFormError(null);
+    setIsSubmitting(true);
 
     // Validation
     if (!formData.firstName.trim() || !formData.lastName.trim()) {
       setFormError('First and last name are required');
+      setIsSubmitting(false);
       return;
     }
 
     if (!formData.gender) {
       setFormError('Gender is required');
-      return;
-    }
-
-    if (!formData.dateOfBirth) {
-      setFormError('Date of birth is required');
+      setIsSubmitting(false);
       return;
     }
 
     if (!formData.phoneNumber) {
       setFormError('Phone number is required');
+      setIsSubmitting(false);
       return;
     }
 
     try {
-      await addClient(formData);
-      
+      if (initialData && initialData._id) {
+        // Update existing client
+        await updateClient(initialData._id, formData);
+      } else {
+        // Add new client
+        await addClient(formData);
+      }
+
       // Clear form if not editing
       if (!initialData) {
         setFormData({
@@ -99,8 +110,15 @@ const ClientForm = ({ addClient, initialData = null, onCancel = null }) => {
           medicalHistory: ''
         });
       }
+
+      // Call onCancel to close the form if provided
+      if (onCancel) {
+        onCancel();
+      }
     } catch (err) {
       setFormError(err.message || 'Failed to save client');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -181,7 +199,7 @@ const ClientForm = ({ addClient, initialData = null, onCancel = null }) => {
               </div>
               
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Date of Birth*</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Date of Birth</label>
                 <div className="relative">
                   <input
                     type="date"
@@ -189,7 +207,6 @@ const ClientForm = ({ addClient, initialData = null, onCancel = null }) => {
                     value={formData.dateOfBirth}
                     onChange={handleChange}
                     className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
-                    required
                   />
                   <div className="absolute inset-y-0 right-0 flex items-center px-3 pointer-events-none">
                     <Calendar size={16} className="text-gray-400" />
@@ -243,7 +260,6 @@ const ClientForm = ({ addClient, initialData = null, onCancel = null }) => {
               type="button"
               onClick={onCancel}
               className="px-5 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 flex items-center transition-colors"
-             
             >
               <X size={16} className="mr-2" />
               Cancel

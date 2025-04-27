@@ -1,4 +1,3 @@
-// components/layout/Sidebar.js
 import React from 'react';
 import { NavLink } from 'react-router-dom';
 import { LayoutDashboard, Users, Activity, Calendar, Settings, HelpCircle, FileText } from 'lucide-react';

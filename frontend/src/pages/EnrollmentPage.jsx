@@ -1,19 +1,28 @@
-// pages/EnrollmentsPage.js
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAppContext } from '../context/AppContext';
 import EnrollmentForm from '../components/enrollments/EnrollmentForm';
-import { UserCheck, Search, Plus, RefreshCw, X} from 'lucide-react';
+import { UserCheck, Search, Plus, RefreshCw, X, Edit, Trash2 } from 'lucide-react';
 
 const EnrollmentsPage = () => {
-  const { enrollments, programs, clients, loading, error, deleteEnrollment } = useAppContext();
+  const { 
+    enrollments, 
+    programs, 
+    clients, 
+    loading, 
+    error, 
+    deleteEnrollment,
+    getEnrollmentById
+  } = useAppContext();
   const [showForm, setShowForm] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+  const [editingEnrollment, setEditingEnrollment] = useState(null);
+  const navigate = useNavigate();
 
   // Filter enrollments based on search term
   const filteredEnrollments = enrollments.filter(enrollment => {
-    const client = clients.find(c => c._id === enrollment.client);
-    const program = programs.find(p => p._id === enrollment.program);
+    const client = clients.find(c => c._id === enrollment.client?._id || c._id === enrollment.client);
+    const program = programs.find(p => p._id === enrollment.program?._id || p._id === enrollment.program);
     
     if (!client || !program) return false;
     
@@ -22,14 +31,19 @@ const EnrollmentsPage = () => {
       client.firstName.toLowerCase().includes(searchLower) ||
       client.lastName.toLowerCase().includes(searchLower) ||
       program.name.toLowerCase().includes(searchLower) ||
-      enrollment.status.toLowerCase().includes(searchLower)
-    );
-  });
+      (enrollment.status && enrollment.status.toLowerCase().includes(searchLower))
+    )
+  })
 
   const handleDelete = async (id) => {
     if (window.confirm('Are you sure you want to delete this enrollment?')) {
       await deleteEnrollment(id);
     }
+  };
+
+  const handleEdit = (enrollment) => {
+    setEditingEnrollment(enrollment);
+    setShowForm(true);
   };
 
   return (
@@ -40,7 +54,10 @@ const EnrollmentsPage = () => {
           Program Enrollments
         </h1>
         <button
-          onClick={() => setShowForm(!showForm)}
+          onClick={() => {
+            setEditingEnrollment(null);
+            setShowForm(!showForm);
+          }}
           className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center gap-2"
         >
           {showForm ? (
@@ -60,8 +77,15 @@ const EnrollmentsPage = () => {
       {showForm && (
         <div className="mb-8">
           <EnrollmentForm 
-            onCancel={() => setShowForm(false)}
-            onEnroll={() => setShowForm(false)}
+            initialData={editingEnrollment}
+            onCancel={() => {
+              setShowForm(false);
+              setEditingEnrollment(null);
+            }}
+            onEnroll={() => {
+              setShowForm(false);
+              setEditingEnrollment(null);
+            }}
           />
         </div>
       )}
@@ -73,7 +97,7 @@ const EnrollmentsPage = () => {
           </div>
           <input
             type="text"
-            placeholder="Search enrollments..."
+            placeholder="Search enrollments by client, program or status..."
             className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
@@ -104,8 +128,8 @@ const EnrollmentsPage = () => {
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
                 {filteredEnrollments.map(enrollment => {
-                  const client = clients.find(c => c._id === enrollment.client);
-                  const program = programs.find(p => p._id === enrollment.program);
+                  const client = clients.find(c => c._id === enrollment.client?._id || c._id === enrollment.client);
+                  const program = programs.find(p => p._id === enrollment.program?._id || p._id === enrollment.program);
                   
                   if (!client || !program) return null;
                   
@@ -114,7 +138,7 @@ const EnrollmentsPage = () => {
                       <td className="px-6 py-4 whitespace-nowrap">
                         <Link 
                           to={`/clients/${client._id}`} 
-                          className="text-blue-600 hover:underline"
+                          className="text-blue-600 hover:underline flex items-center"
                         >
                           {client.firstName} {client.lastName}
                         </Link>
@@ -139,19 +163,21 @@ const EnrollmentsPage = () => {
                           {enrollment.status}
                         </span>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium flex gap-2">
                         <button
-                          onClick={() => handleDelete(enrollment.id)}
-                          className="text-red-600 hover:text-red-900 mr-4"
+                          onClick={() => handleEdit(enrollment)}
+                          className="text-blue-600 hover:text-blue-900 flex items-center gap-1"
                         >
+                          <Edit size={16} />
+                          Edit
+                        </button>
+                        <button
+                          onClick={() => handleDelete(enrollment._id)}
+                          className="text-red-600 hover:text-red-900 flex items-center gap-1"
+                        >
+                          <Trash2 size={16} />
                           Delete
                         </button>
-                        <Link
-                          to={`/enrollments/${enrollment._id}/edit`}
-                          className="text-blue-600 hover:text-blue-900"
-                        >
-                          Edit
-                        </Link>
                       </td>
                     </tr>
                   );

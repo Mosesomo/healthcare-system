@@ -1,4 +1,3 @@
-// components/layout/Navbar.js
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { LogOut, Bell, User } from 'lucide-react';

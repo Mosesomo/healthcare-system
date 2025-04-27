@@ -33,8 +33,8 @@ const EnrollmentForm = ({
   useEffect(() => {
     if (initialData) {
       setFormData({
-        programId: initialData.program,
-        clientId: initialData.client,
+        programId: initialData.program?._id || initialData.program || '',
+        clientId: initialData.client?._id || initialData.client || '',
         enrollmentDate: initialData.enrollmentDate || new Date().toISOString().split('T')[0],
         notes: initialData.notes || '',
         status: initialData.status || 'Active'
@@ -71,39 +71,43 @@ const EnrollmentForm = ({
     }
 
     try {
+      const enrollmentData = {
+        clientId: formData.clientId,
+        programId: formData.programId,
+        enrollmentDate: formData.enrollmentDate,
+        status: formData.status,
+        notes: formData.notes
+      };
+
       if (initialData) {
-        // Update existing enrollment
-        await updateEnrollment(initialData._id, formData);
+        await updateEnrollment(initialData._id, enrollmentData);
         toast.success('Enrollment updated successfully');
       } else {
-        // Use the onEnroll callback if provided (for parent components to handle)
+        // Create new enrollment
         if (onEnroll) {
-          await onEnroll(formData);
+          await onEnroll(enrollmentData);
         } else {
-          // Otherwise use the context method directly
-          await addEnrollment(formData);
+          await addEnrollment(enrollmentData);
           toast.success('Client enrolled successfully');
         }
       }
 
-      // Clear form if not editing
-      if (!initialData && !clientId && !onEnroll) {
+      // Reset form if not editing
+      if (!initialData && !onEnroll) {
         setFormData({
           programId: programId || '',
-          clientId: '',
+          clientId: clientId || '',
           enrollmentDate: new Date().toISOString().split('T')[0],
           notes: '',
           status: 'Active'
         });
       }
 
-      // Close form if callback provided
-      if (onCancel) {
-        onCancel();
-      }
+      if (onCancel) onCancel();
     } catch (err) {
-      setFormError(err.message || 'Failed to process enrollment');
-      toast.error(err.message || 'Failed to process enrollment');
+      console.error('Enrollment error:', err);
+      setFormError(err.response?.data?.message || 'Failed to process enrollment');
+      toast.error(err.response?.data?.message || 'Failed to process enrollment');
     }
   };
 
@@ -145,11 +149,12 @@ const EnrollmentForm = ({
                     onChange={handleChange}
                     className="appearance-none w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all bg-white pr-10"
                     required
+                    disabled={!!clientId}
                      // Disable if clientId is provided
                   >
                     <option value="">-- Select a client --</option>
                     {clients.map(client => (
-                      <option key={client.id} value={client.id}>
+                      <option key={client._idid} value={client._id}>
                         {client.firstName} {client.lastName} ({client.phoneNumber})
                       </option>
                     ))}
@@ -175,7 +180,7 @@ const EnrollmentForm = ({
                   >
                     <option value="">-- Select a program --</option>
                     {activePrograms.map(program => (
-                      <option key={program.id} value={program.id}>
+                      <option key={program._id} value={program._id}>
                         {program.name} ({program.category})
                       </option>
                     ))}
