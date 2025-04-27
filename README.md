@@ -76,3 +76,5 @@ The system provides a RESTful API with the following endpoints:
 - Medication tracking
 - Mobile application
 
+The App is live through this link --> https://healthcare-system-9vr1.vercel.app/
+
