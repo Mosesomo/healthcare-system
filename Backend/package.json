@@ -23,7 +23,8 @@
     "express": "^5.1.0",
     "jsonwebtoken": "^9.0.2",
     "mongodb-client-encryption": "^6.3.0",
-    "mongoose": "^8.14.0"
+    "mongoose": "^8.14.0",
+    "vercel": "^41.6.2"
   },
   "devDependencies": {
     "@jest/globals": "^29.7.0",
