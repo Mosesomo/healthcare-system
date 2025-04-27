@@ -1,71 +1,25 @@
-// pages/ClientsPage.js
 import React, { useState } from 'react';
 import ClientList from '../components/clients/ClientList';
 import ClientForm from '../components/clients/ClientForm';
+import { useAppContext } from '../context/AppContext';
 
 const ClientsPage = () => {
   const [showAddClientForm, setShowAddClientForm] = useState(false);
-  const [clients, setClients] = useState([
-    {
-      id: '1',
-      firstName: 'Sarah',
-      lastName: 'Johnson',
-      gender: 'Female',
-      dateOfBirth: '1985-06-15',
-      phoneNumber: '555-123-4567',
-      address: {
-        street: '123 Main St',
-        city: 'Anytown',
-        state: 'CA',
-        zipCode: '90210'
-      },
-      medicalHistory: 'No significant medical history'
-    },
-    {
-      id: '2',
-      firstName: 'Michael',
-      lastName: 'Brown',
-      gender: 'Male',
-      dateOfBirth: '1978-11-30',
-      phoneNumber: '555-987-6543',
-      address: {
-        street: '456 Oak Ave',
-        city: 'Somewhere',
-        state: 'NY',
-        zipCode: '10001'
-      },
-      medicalHistory: 'Hypertension'
-    },
-    {
-      id: '3',
-      firstName: 'Emma',
-      lastName: 'Davis',
-      gender: 'Female',
-      dateOfBirth: '1990-03-22',
-      phoneNumber: '555-456-7890',
-      address: {
-        street: '789 Pine St',
-        city: 'Elsewhere',
-        state: 'TX',
-        zipCode: '75001'
-      },
-      medicalHistory: 'Asthma'
-    }
-  ]);
-  
   const [searchQuery, setSearchQuery] = useState('');
+  const { clients, addClient, searchClients, loading } = useAppContext();
   
-  const addClient = (newClient) => {
-    const id = Date.now().toString();
-    setClients([...clients, { ...newClient, id }]);
+  // Use filtered clients from context or search results
+  const filteredClients = searchQuery ? 
+    clients.filter(client => {
+      const fullName = `${client.firstName} ${client.lastName}`.toLowerCase();
+      return fullName.includes(searchQuery.toLowerCase()) || 
+             client.phoneNumber.includes(searchQuery);
+    }) : clients;
+
+  const handleAddClient = (newClient) => {
+    addClient(newClient);
     setShowAddClientForm(false);
   };
-  
-  const filteredClients = clients.filter(client => {
-    const fullName = `${client.firstName} ${client.lastName}`.toLowerCase();
-    return fullName.includes(searchQuery.toLowerCase()) || 
-           client.phoneNumber.includes(searchQuery);
-  });
 
   return (
     <div>
@@ -80,10 +34,15 @@ const ClientsPage = () => {
       </div>
       
       {showAddClientForm ? (
-        <ClientForm addClient={addClient} />
+        <ClientForm addClient={handleAddClient} />
       ) : (
         <>
-          <ClientList clients={filteredClients} />
+          
+          {loading ? (
+            <p>Loading clients...</p>
+          ) : (
+            <ClientList clients={filteredClients} />
+          )}
         </>
       )}
     </div>

@@ -2,8 +2,10 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Eye, Trash2, Edit, Search, Filter, ChevronDown, ChevronUp, UserX, ChevronLeft, ChevronRight } from 'lucide-react';
+import { useAppContext } from '../../context/AppContext';
 
 const ClientList = ({ clients, onDelete }) => {
+  const { deleteClient } = useAppContext();
   const [searchTerm, setSearchTerm] = useState('');
   const [sortField, setSortField] = useState('lastName');
   const [sortDirection, setSortDirection] = useState('asc');
@@ -17,6 +19,17 @@ const ClientList = ({ clients, onDelete }) => {
     } else {
       setSortField(field);
       setSortDirection('asc');
+    }
+  };
+
+   // Handle delete with confirmation
+   const handleDelete = async (id) => {
+    if (window.confirm('Are you sure you want to delete this client? This action cannot be undone.')) {
+      try {
+        await deleteClient(id);
+      } catch (error) {
+        console.error('Error deleting client:', error);
+      }
     }
   };
 
@@ -150,7 +163,7 @@ const ClientList = ({ clients, onDelete }) => {
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
             {currentClients.map((client) => (
-              <tr key={client.id} className="hover:bg-gray-50 transition-colors">
+              <tr key={client._id} className="hover:bg-gray-50 transition-colors">
                 <td className="px-6 py-4 whitespace-nowrap">
                   <div className="flex items-center">
                     <div className="flex-shrink-0 h-8 w-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-medium">
@@ -180,21 +193,21 @@ const ClientList = ({ clients, onDelete }) => {
                 <td className="px-6 py-4 whitespace-nowrap text-right text-sm">
                   <div className="flex justify-end gap-2">
                     <Link 
-                      to={`/clients/${client.id}`} 
+                      to={`/clients/${client._id}`} 
                       className="p-1.5 text-blue-600 hover:bg-blue-50 rounded"
                       title="View Client"
                     >
                       <Eye size={18} />
                     </Link>
                     <Link 
-                      to={`/clients/edit/${client.id}`} 
+                      to={`/clients/edit/${client._id}`} 
                       className="p-1.5 text-gray-600 hover:bg-gray-50 rounded"
                       title="Edit Client"
                     >
                       <Edit size={18} />
                     </Link>
                     <button 
-                      onClick={() => onDelete && onDelete(client.id)} 
+                      onClick={() => handleDelete(client._id)} 
                       className="p-1.5 text-red-600 hover:bg-red-50 rounded"
                       title="Delete Client"
                     >

@@ -12,7 +12,7 @@ const Sidebar = () => {
   ];
 
   return (
-    <aside className="w-64 bg-white border-r border-gray-200 shadow-sm h-screen font-jost">
+    <aside className="w-64 bg-white border-r border-gray-200 shadow-sm h-screen font-jost mt-12">
       <div className="p-6 border-b">
         <h2 className="text-lg font-medium text-gray-800">Healthcare IS</h2>
         <p className="text-xs text-gray-500">Management Portal</p>

@@ -1,65 +1,40 @@
-// pages/ProgramsPage.js
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
 import ProgramList from '../components/programs/ProgramList';
 import ProgramForm from '../components/programs/ProgramForm';
+import { useAppContext } from '../context/AppContext';
 
 const ProgramsPage = () => {
   const [showAddProgramForm, setShowAddProgramForm] = useState(false);
-  const [programs, setPrograms] = useState([
-    {
-      id: '1',
-      name: 'TB Prevention',
-      description: 'Program focused on tuberculosis prevention and early detection.',
-      category: 'Infectious Disease',
-      startDate: '2023-01-01',
-      active: true
-    },
-    {
-      id: '2',
-      name: 'HIV Treatment',
-      description: 'Comprehensive treatment and support program for HIV patients.',
-      category: 'Chronic Disease',
-      startDate: '2023-01-15',
-      active: true
-    },
-    {
-      id: '3',
-      name: 'Malaria Control',
-      description: 'Prevention and treatment of malaria in high-risk communities.',
-      category: 'Infectious Disease',
-      startDate: '2023-02-01',
-      active: true
-    },
-    {
-      id: '4',
-      name: 'Diabetes Management',
-      description: 'Program to help manage diabetes through education and treatment.',
-      category: 'Chronic Disease',
-      startDate: '2023-03-01',
-      active: true
-    }
-  ]);
-  
-  const addProgram = (newProgram) => {
-    const id = Date.now().toString();
-    setPrograms([...programs, { ...newProgram, id }]);
-    setShowAddProgramForm(false);
-  };
+  const { programs, addProgram, loading, error } = useAppContext();
 
   return (
-    <div>
+    <div className="p-6 bg-gray-50 min-h-screen font-jost">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">Health Programs</h1>
+        <h1 className="text-2xl font-bold text-gray-800">Health Programs</h1>
         <button 
           onClick={() => setShowAddProgramForm(!showAddProgramForm)}
-          className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm font-medium"
         >
           {showAddProgramForm ? 'Cancel' : 'Add New Program'}
         </button>
       </div>
-      
-      {showAddProgramForm ? (
-        <ProgramForm addProgram={addProgram} />
+
+      {loading && !programs.length ? (
+        <div className="flex justify-center items-center h-64">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+        </div>
+      ) : error ? (
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-red-700">
+          Error loading programs: {error}
+        </div>
+      ) : showAddProgramForm ? (
+        <ProgramForm 
+          addProgram={(programData) => {
+            addProgram(programData);
+            setShowAddProgramForm(false);
+          }} 
+          onCancel={() => setShowAddProgramForm(false)}
+        />
       ) : (
         <ProgramList programs={programs} />
       )}

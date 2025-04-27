@@ -181,21 +181,21 @@ const ProgramList = ({ programs, onDelete }) => {
                 <td className="px-6 py-4 whitespace-nowrap text-right text-sm">
                   <div className="flex justify-end gap-2">
                     <Link 
-                      to={`/programs/${program.id}`} 
+                      to={`/programs/${program._id}`} 
                       className="p-1.5 text-blue-600 hover:bg-blue-50 rounded"
                       title="View Program"
                     >
                       <Eye size={18} />
                     </Link>
                     <Link 
-                      to={`/programs/edit/${program.id}`} 
+                      to={`/programs/edit/${program._id}`} 
                       className="p-1.5 text-gray-600 hover:bg-gray-50 rounded"
                       title="Edit Program"
                     >
                       <Edit size={18} />
                     </Link>
                     <button 
-                      onClick={() => onDelete && onDelete(program.id)} 
+                      onClick={() => onDelete && onDelete(program._id)} 
                       className="p-1.5 text-red-600 hover:bg-red-50 rounded"
                       title="Delete Program"
                     >

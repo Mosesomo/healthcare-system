@@ -38,14 +38,14 @@ const ClientDetail = ({ client, onDelete }) => {
             <span>Print</span>
           </button>
           <Link 
-            to={`/clients/edit/${client.id}`}
+            to={`/clients/edit/${client._id}`}
             className="flex items-center gap-1 px-3 py-2 border border-green-300 bg-green-50 rounded-lg text-green-700 hover:bg-green-100 transition-colors"
           >
             <Edit size={16} />
             <span>Edit</span>
           </Link>
           <button 
-            onClick={() => onDelete && onDelete(client.id)} 
+            onClick={() => onDelete && onDelete(client._id)} 
             className="flex items-center gap-1 px-3 py-2 border border-red-300 bg-red-50 rounded-lg text-red-700 hover:bg-red-100 transition-colors"
           >
             <Trash2 size={16} />

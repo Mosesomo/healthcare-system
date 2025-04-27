@@ -1,25 +1,95 @@
 // pages/Dashboard.js
-import React from 'react';
+import React, { useContext, useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Users, Activity, UserCheck, TrendingUp, Calendar, Clock, AlertCircle } from 'lucide-react';
+import { useAppContext } from '../context/AppContext';
 
 const Dashboard = () => {
-  // Static data for now
+  const { clients, programs, enrollments, loading, getClient, getProgram, } = useAppContext();
+
+  const [recentClient, setRecentClients] = useState([]);
+  const [activeProgram, setActivePrograms] = useState([]);
+
+  // Load recent clients with full details
+  useEffect(() => {
+    if (clients.length > 0) {
+      const fetchRecentClients = async () => {
+        const recent = clients.slice(0, 3).map(async (client) => {
+          const fullClient = await getClient(client.id); // Fetch full client details
+          return {
+            ...fullClient,
+            enrolledPrograms: enrollments.filter(e => e.client === client.id).length
+          };
+        });
+        const resolvedClients = await Promise.all(recent);
+        setRecentClients(resolvedClients);
+      };
+      fetchRecentClients();
+    }
+  }, [clients, enrollments, getClient]);
+
+  // Load active programs with enrollment counts
+  useEffect(() => {
+    if (programs.length > 0) {
+      const fetchActivePrograms = async () => {
+        const active = programs.slice(0, 3).map(async (program) => {
+          const fullProgram = await getProgram(program.id); // Fetch full program details
+          return {
+            ...fullProgram,
+            enrolledClients: enrollments.filter(e => e.program === program.id).length,
+            progress: Math.floor(Math.random() * 50) + 50 // Example progress
+          };
+        });
+        const resolvedPrograms = await Promise.all(active);
+        setActivePrograms(resolvedPrograms);
+      };
+      fetchActivePrograms();
+    }
+  }, [programs, enrollments, getProgram]);
+
+  // Calculate stats from context data
   const stats = {
-    clientsCount: 25,
-    programsCount: 4,
-    activeEnrollmentsCount: 32,
+    clientsCount: clients.length,
+    programsCount: programs.length,
+    activeEnrollmentsCount: enrollments.filter(e => e.status === 'Active').length,
   };
 
-  // Chart data (placeholder)
+  // Get recent clients (last 3)
+  const recentClients = [...clients].slice(0, 3).map(client => ({
+    id: client.id,
+    name: `${client.firstName} ${client.lastName}`,
+    enrolledPrograms: enrollments.filter(e => e.client === client.id).length,
+    status: 'Active' // Simplified for this example
+  }));
+
+  // Get active programs with enrollment counts
+  const activePrograms = programs.slice(0, 3).map(program => ({
+    id: program.id,
+    name: program.name,
+    enrolledClients: enrollments.filter(e => e.program === program.id).length,
+    progress: Math.floor(Math.random() * 50) + 50 // Random progress for demo
+  }));
+
+  // Chart data (placeholder - would ideally use real data over time)
   const chartData = [
-    { month: 'Jan', enrollments: 12 },
-    { month: 'Feb', enrollments: 19 },
-    { month: 'Mar', enrollments: 15 },
-    { month: 'Apr', enrollments: 22 },
-    { month: 'May', enrollments: 28 },
-    { month: 'Jun', enrollments: 25 },
+    { month: 'Jan', enrollments: Math.floor(Math.random() * 10) + 5 },
+    { month: 'Feb', enrollments: Math.floor(Math.random() * 10) + 10 },
+    { month: 'Mar', enrollments: Math.floor(Math.random() * 10) + 15 },
+    { month: 'Apr', enrollments: Math.floor(Math.random() * 10) + 20 },
+    { month: 'May', enrollments: Math.floor(Math.random() * 10) + 25 },
+    { month: 'Jun', enrollments: Math.floor(Math.random() * 10) + 20 },
   ];
+
+  if (loading) {
+    return (
+      <div className="p-6 bg-gray-50 min-h-screen font-jost flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Loading dashboard data...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="p-6 bg-gray-50 min-h-screen font-jost">
@@ -30,7 +100,7 @@ const Dashboard = () => {
             <Calendar size={16} />
             <span>Today</span>
           </button>
-          <button className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm font-medium">Generate Report</button>
+         
         </div>
       </div>
       
@@ -42,7 +112,7 @@ const Dashboard = () => {
               <h2 className="text-3xl font-bold text-gray-800 mt-1">{stats.clientsCount}</h2>
               <div className="flex items-center gap-1 mt-2 text-green-600 text-xs font-medium">
                 <TrendingUp size={14} />
-                <span>+3.2% from last month</span>
+                <span>+{Math.floor(Math.random() * 5) + 1}% from last month</span>
               </div>
             </div>
             <div className="bg-blue-50 p-3 rounded-full">
@@ -65,7 +135,7 @@ const Dashboard = () => {
               <h2 className="text-3xl font-bold text-gray-800 mt-1">{stats.programsCount}</h2>
               <div className="flex items-center gap-1 mt-2 text-blue-600 text-xs font-medium">
                 <Clock size={14} />
-                <span>1 new program this month</span>
+                <span>{Math.floor(Math.random() * 3) + 1} new program(s) this month</span>
               </div>
             </div>
             <div className="bg-green-50 p-3 rounded-full">
@@ -88,7 +158,7 @@ const Dashboard = () => {
               <h2 className="text-3xl font-bold text-gray-800 mt-1">{stats.activeEnrollmentsCount}</h2>
               <div className="flex items-center gap-1 mt-2 text-purple-600 text-xs font-medium">
                 <TrendingUp size={14} />
-                <span>+12.5% from last month</span>
+                <span>+{Math.floor(Math.random() * 15) + 5}% from last month</span>
               </div>
             </div>
             <div className="bg-purple-50 p-3 rounded-full">
@@ -116,7 +186,6 @@ const Dashboard = () => {
           </div>
         </div>
         <div className="h-64 w-full">
-          {/* This is a placeholder for a chart - in a real app, you'd use a chart library */}
           <div className="flex items-end h-48 gap-2 pt-4 border-b border-t border-gray-100">
             {chartData.map((data, index) => (
               <div key={index} className="flex flex-col items-center flex-1">
@@ -151,12 +220,8 @@ const Dashboard = () => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
-                {[
-                  { id: '1', name: 'Sarah Johnson', enrolledPrograms: 2, status: 'Active' },
-                  { id: '2', name: 'Michael Brown', enrolledPrograms: 1, status: 'Active' },
-                  { id: '3', name: 'Emma Davis', enrolledPrograms: 3, status: 'Pending' }
-                ].map(client => (
-                  <tr key={client.id} className="hover:bg-gray-50">
+                {recentClients.map(client => (
+                  <tr key={client._id} className="hover:bg-gray-50">
                     <td className="py-4 px-6 text-sm text-gray-800 font-medium">{client.name}</td>
                     <td className="py-4 px-6 text-sm text-gray-600">
                       <span className="bg-blue-50 text-blue-700 py-1 px-2 rounded-full text-xs font-medium">
@@ -178,7 +243,7 @@ const Dashboard = () => {
                       </span>
                     </td>
                     <td className="py-4 px-6 text-right">
-                      <Link to={`/clients/${client.id}`} className="text-blue-600 hover:underline text-sm font-medium">View Details</Link>
+                      <Link to={`/clients/${client._id}`} className="text-blue-600 hover:underline text-sm font-medium">View Details</Link>
                     </td>
                   </tr>
                 ))}
@@ -206,12 +271,8 @@ const Dashboard = () => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
-                {[
-                  { id: '1', name: 'TB Prevention', enrolledClients: 10, progress: 75 },
-                  { id: '2', name: 'HIV Treatment', enrolledClients: 15, progress: 60 },
-                  { id: '3', name: 'Malaria Control', enrolledClients: 7, progress: 40 }
-                ].map(program => (
-                  <tr key={program.id} className="hover:bg-gray-50">
+                {activePrograms.map(program => (
+                  <tr key={program._id} className="hover:bg-gray-50">
                     <td className="py-4 px-6 text-sm text-gray-800 font-medium">{program.name}</td>
                     <td className="py-4 px-6 text-sm text-gray-600">
                       <span className="bg-purple-50 text-purple-700 py-1 px-2 rounded-full text-xs font-medium">
@@ -227,7 +288,7 @@ const Dashboard = () => {
                       </div>
                     </td>
                     <td className="py-4 px-6 text-right">
-                      <Link to={`/programs/${program.id}`} className="text-blue-600 hover:underline text-sm font-medium">View Details</Link>
+                      <Link to={`/programs/${program._id}`} className="text-blue-600 hover:underline text-sm font-medium">View Details</Link>
                     </td>
                   </tr>
                 ))}
@@ -245,7 +306,7 @@ const Dashboard = () => {
         <div>
           <h3 className="font-medium text-orange-800">Attention Required</h3>
           <p className="text-sm text-orange-700 mt-1">
-            5 clients require follow-up for their TB Prevention program. 
+            {Math.floor(Math.random() * 5) + 1} clients require follow-up for their TB Prevention program. 
             <Link to="/alerts" className="font-medium underline ml-1">
               View alerts
             </Link>

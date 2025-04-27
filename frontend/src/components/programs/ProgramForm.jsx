@@ -11,6 +11,8 @@ const ProgramForm = ({ addProgram, initialData = null, onCancel = null }) => {
     active: true
   });
 
+  const [formError, setFormError] = useState(null);
+
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
     setFormData({
@@ -21,18 +23,45 @@ const ProgramForm = ({ addProgram, initialData = null, onCancel = null }) => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    addProgram(formData);
-    
-    // Clear form if not editing
-    if (!initialData) {
-      setFormData({
-        name: '',
-        description: '',
-        category: '',
-        startDate: '',
-        endDate: '',
-        active: true
-      });
+    setFormError(null);
+
+    // Basic validation
+    if (!formData.name.trim()) {
+      setFormError('Program name is required');
+      return;
+    }
+
+    if (!formData.description.trim()) {
+      setFormError('Description is required');
+      return;
+    }
+
+    if (!formData.category.trim()) {
+      setFormError('Category is required');
+      return;
+    }
+
+    if (!formData.startDate) {
+      setFormError('Start date is required');
+      return;
+    }
+
+    try {
+      addProgram(formData);
+      
+      // Clear form if not editing
+      if (!initialData) {
+        setFormData({
+          name: '',
+          description: '',
+          category: '',
+          startDate: '',
+          endDate: '',
+          active: true
+        });
+      }
+    } catch (error) {
+      setFormError(error.message || 'Failed to save program');
     }
   };
 
@@ -47,6 +76,12 @@ const ProgramForm = ({ addProgram, initialData = null, onCancel = null }) => {
         </h2>
       </div>
       
+      {formError && (
+        <div className="mb-4 p-3 bg-red-50 text-red-700 rounded-lg border border-red-200">
+          {formError}
+        </div>
+      )}
+
       <form onSubmit={handleSubmit}>
         {/* Program Details Section */}
         <div className="mb-6">
@@ -57,7 +92,7 @@ const ProgramForm = ({ addProgram, initialData = null, onCancel = null }) => {
           <div className="bg-gray-50 p-5 rounded-lg border border-gray-100">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-gray-700 mb-1">Program Name</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Program Name*</label>
                 <input
                   type="text"
                   name="name"
@@ -70,7 +105,7 @@ const ProgramForm = ({ addProgram, initialData = null, onCancel = null }) => {
               </div>
               
               <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Description*</label>
                 <textarea
                   name="description"
                   value={formData.description}
@@ -83,7 +118,7 @@ const ProgramForm = ({ addProgram, initialData = null, onCancel = null }) => {
               </div>
               
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Category</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Category*</label>
                 <div className="relative">
                   <input
                     type="text"
@@ -112,7 +147,7 @@ const ProgramForm = ({ addProgram, initialData = null, onCancel = null }) => {
           <div className="bg-gray-50 p-5 rounded-lg border border-gray-100">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Start Date</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Start Date*</label>
                 <div className="relative">
                   <input
                     type="date"

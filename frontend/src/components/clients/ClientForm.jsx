@@ -1,8 +1,12 @@
-// components/clients/ClientForm.js
-import React, { useState } from 'react';
+import React, { useState, useEffect} from 'react';
+import { useParams  } from 'react-router-dom';
 import { User, Phone, MapPin, FileText, Calendar, Save, UserCheck, X } from 'lucide-react';
+import { useAppContext } from '../../context/AppContext';
+
 
 const ClientForm = ({ addClient, initialData = null, onCancel = null }) => {
+  const { id } = useParams();
+  const {  updateClient, getClient } = useAppContext();
   const [formData, setFormData] = useState(initialData || {
     firstName: '',
     lastName: '',
@@ -10,13 +14,25 @@ const ClientForm = ({ addClient, initialData = null, onCancel = null }) => {
     dateOfBirth: '',
     phoneNumber: '',
     address: {
-      street: '',
       city: '',
       state: '',
       zipCode: ''
     },
     medicalHistory: ''
   });
+
+  const [formError, setFormError] = useState(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Load client data if editing
+  useEffect(() => {
+    if (id && id !== 'new') {
+      const client = getClient(id);
+      if (client) {
+        setFormData(client);
+      }
+    }
+  }, [id, getClient]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -38,26 +54,53 @@ const ClientForm = ({ addClient, initialData = null, onCancel = null }) => {
     }
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    addClient(formData);
-    
-    // Clear form if not editing
-    if (!initialData) {
-      setFormData({
-        firstName: '',
-        lastName: '',
-        gender: '',
-        dateOfBirth: '',
-        phoneNumber: '',
-        address: {
-          street: '',
-          city: '',
-          state: '',
-          zipCode: ''
-        },
-        medicalHistory: ''
-      });
+    setFormError(null);
+
+    // Validation
+    if (!formData.firstName.trim() || !formData.lastName.trim()) {
+      setFormError('First and last name are required');
+      return;
+    }
+
+    if (!formData.gender) {
+      setFormError('Gender is required');
+      return;
+    }
+
+    if (!formData.dateOfBirth) {
+      setFormError('Date of birth is required');
+      return;
+    }
+
+    if (!formData.phoneNumber) {
+      setFormError('Phone number is required');
+      return;
+    }
+
+    try {
+      await addClient(formData);
+      
+      // Clear form if not editing
+      if (!initialData) {
+        setFormData({
+          firstName: '',
+          lastName: '',
+          gender: '',
+          dateOfBirth: '',
+          phoneNumber: '',
+          address: {
+            street: '',
+            city: '',
+            state: '',
+            zipCode: ''
+          },
+          medicalHistory: ''
+        });
+      }
+    } catch (err) {
+      setFormError(err.message || 'Failed to save client');
     }
   };
 
@@ -72,6 +115,12 @@ const ClientForm = ({ addClient, initialData = null, onCancel = null }) => {
         </h2>
       </div>
       
+      {(formError) && (
+        <div className="mb-4 p-3 bg-red-50 text-red-700 rounded-lg border border-red-200">
+          {formError}
+        </div>
+      )}
+
       <form onSubmit={handleSubmit}>
         {/* Personal Information Section */}
         <div className="mb-6">
@@ -82,7 +131,7 @@ const ClientForm = ({ addClient, initialData = null, onCancel = null }) => {
           <div className="bg-gray-50 p-5 rounded-lg border border-gray-100">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">First Name</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">First Name*</label>
                 <input
                   type="text"
                   name="firstName"
@@ -95,7 +144,7 @@ const ClientForm = ({ addClient, initialData = null, onCancel = null }) => {
               </div>
               
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Last Name</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Last Name*</label>
                 <input
                   type="text"
                   name="lastName"
@@ -108,7 +157,7 @@ const ClientForm = ({ addClient, initialData = null, onCancel = null }) => {
               </div>
               
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Gender</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Gender*</label>
                 <div className="relative">
                   <select
                     name="gender"
@@ -121,6 +170,7 @@ const ClientForm = ({ addClient, initialData = null, onCancel = null }) => {
                     <option value="Male">Male</option>
                     <option value="Female">Female</option>
                     <option value="Other">Other</option>
+                    <option value="Prefer not to say">Prefer not to say</option>
                   </select>
                   <div className="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
                     <svg className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -131,7 +181,7 @@ const ClientForm = ({ addClient, initialData = null, onCancel = null }) => {
               </div>
               
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Date of Birth</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Date of Birth*</label>
                 <div className="relative">
                   <input
                     type="date"
@@ -148,7 +198,7 @@ const ClientForm = ({ addClient, initialData = null, onCancel = null }) => {
               </div>
               
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Phone Number</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Phone Number*</label>
                 <div className="relative">
                   <input
                     type="tel"
@@ -168,65 +218,6 @@ const ClientForm = ({ addClient, initialData = null, onCancel = null }) => {
           </div>
         </div>
         
-        {/* Address Section */}
-        <div className="mb-6">
-          <div className="flex items-center mb-4">
-            <MapPin size={16} className="text-blue-600 mr-2" />
-            <h3 className="text-sm font-medium text-gray-900 uppercase tracking-wider">Address Information</h3>
-          </div>
-          <div className="bg-gray-50 p-5 rounded-lg border border-gray-100">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-gray-700 mb-1">Street Address</label>
-                <input
-                  type="text"
-                  name="address.street"
-                  value={formData.address?.street || ''}
-                  onChange={handleChange}
-                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
-                  placeholder="123 Main St"
-                />
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">City</label>
-                <input
-                  type="text"
-                  name="address.city"
-                  value={formData.address?.city || ''}
-                  onChange={handleChange}
-                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
-                  placeholder="New York"
-                />
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">State</label>
-                <input
-                  type="text"
-                  name="address.state"
-                  value={formData.address?.state || ''}
-                  onChange={handleChange}
-                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
-                  placeholder="NY"
-                />
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Zip Code</label>
-                <input
-                  type="text"
-                  name="address.zipCode"
-                  value={formData.address?.zipCode || ''}
-                  onChange={handleChange}
-                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
-                  placeholder="10001"
-                />
-              </div>
-            </div>
-          </div>
-        </div>
-        
         {/* Medical History Section */}
         <div className="mb-6">
           <div className="flex items-center mb-4">
@@ -237,7 +228,7 @@ const ClientForm = ({ addClient, initialData = null, onCancel = null }) => {
             <label className="block text-sm font-medium text-gray-700 mb-1">Medical History</label>
             <textarea
               name="medicalHistory"
-              value={formData.medicalHistory || ''}
+              value={formData.medicalHistory}
               onChange={handleChange}
               className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
               rows="4"
@@ -252,6 +243,7 @@ const ClientForm = ({ addClient, initialData = null, onCancel = null }) => {
               type="button"
               onClick={onCancel}
               className="px-5 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 flex items-center transition-colors"
+             
             >
               <X size={16} className="mr-2" />
               Cancel
@@ -259,10 +251,23 @@ const ClientForm = ({ addClient, initialData = null, onCancel = null }) => {
           )}
           <button
             type="submit"
-            className="px-5 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center transition-colors"
+            className="px-5 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center transition-colors disabled:opacity-50"
+            disabled={isSubmitting}
           >
-            <Save size={16} className="mr-2" />
-            {initialData ? 'Update Client' : 'Register Client'}
+            {isSubmitting ? (
+              <>
+                <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                {initialData ? 'Updating...' : 'Registering...'}
+              </>
+            ) : (
+              <>
+                <Save size={16} className="mr-2" />
+                {initialData ? 'Update Client' : 'Register Client'}
+              </>
+            )}
           </button>
         </div>
       </form>
