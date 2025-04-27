@@ -21,17 +21,20 @@ A web application for managing clients and health programs/services, built with 
 
 ### Clone the repository
 ```bash
-git clone https://github.com/yourusername/health-information-system.git
-cd health-information-system
+git clone https://github.com/Mosesomo/healthcare-system.git
+cd healthcare-system
 ```
 
 ### Backend Setup
 ```bash
 # Navigate to backend directory
-cd backend
+cd Backend
 
 # Install dependencies
 npm install
+
+# start the server 
+npm run dev
 ```
 
 ### Frontend Setup
