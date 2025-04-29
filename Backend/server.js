@@ -17,7 +17,10 @@ const app = express();
 
 // Middleware
 app.use(express.json());
-app.use(cors());
+app.use(cors({
+  origin: 'https://healthcare-system-9vr1.vercel.app',
+  credentials: true
+}));
 
 // Routes
 app.use('/api/clients', clientRoutes);
